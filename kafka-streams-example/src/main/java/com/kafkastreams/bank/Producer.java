@@ -1,20 +1,15 @@
 package com.kafkastreams.bank;
 
-package com.kafkastreams.bank;
-
 import java.util.Properties;
 
-import javax.json.Json;
-import javax.json.bind.annotation.JsonbProperty;
-
+import java.time.Instant;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.connect.json.JsonSerializer;
-
-import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Producer {
     
@@ -22,12 +17,12 @@ public class Producer {
         Properties props = new Properties();
         props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class.getName());
-        props.setProperty(ProducerConfig.ACKS_CONFIG, "1");
+        props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.setProperty(ProducerConfig.ACKS_CONFIG, "all");
         props.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-        props.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "6");
+        props.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
         props.setProperty(ProducerConfig.RETRIES_CONFIG, "3");
-        KafkaProducer<String, Json> producer = new KafkaProducer<>(props)
+        KafkaProducer<String, String> producer = new KafkaProducer<>(props);
 
         Integer i = 0;
         while (true) {

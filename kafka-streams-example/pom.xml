@@ -70,11 +70,12 @@
       <version>8.0.1</version>
     </dependency>
     
-      <dependency>
+    <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.10.0.pr1</version>
-      </dependency>
+        <version>2.16.1</version>
+    </dependency>
+      
     </dependencies>
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
@@ -136,7 +137,7 @@
             <artifactId>exec-maven-plugin</artifactId>
             <version>1.2.1</version>
             <configuration>
-                <mainClass>com.kafkastreams.bank.Producer</mainClass>
+                <mainClass>com.kafkastreams.bank.Processor</mainClass>
             </configuration>
         </plugin>
       </plugins>
