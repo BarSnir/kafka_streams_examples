@@ -7,50 +7,39 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.connect.json.JsonDeserializer;
 import org.apache.kafka.connect.json.JsonSerializer;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.state.KeyValueIterator;
-import org.apache.kafka.streams.state.KeyValueStore;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.GlobalKTable;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Produced;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GlobalTable {
+public class Stream2Global {
 
-        public static Integer counter = 0;
-        public static void main(String[] args) {
+    public static void main(String[] args) {
         Properties props = getProperties();
         KafkaStreams stream = new KafkaStreams(getTopology(), props);
         stream.start();
-        ReadOnlyKeyValueStore<String, JsonNode> keyValueStore = stream.store(
-            StoreQueryParameters.fromNameAndType(
-                "market-info-store", QueryableStoreTypes.keyValueStore()
-            )
-        );
         Runtime.getRuntime().addShutdownHook(new Thread(stream::close));
         while(true){
         try {
-                KeyValueIterator<String, JsonNode> range = keyValueStore.all();
-                printState(range);
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 break;
             }
         }
     }
-
     public static Properties getProperties() {
         Properties properties = new Properties();
-        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "address-enrich-app");
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "market-info-enrich-app");
         properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         properties.put(StreamsConfig.APPLICATION_SERVER_CONFIG, "localhost:7070");
@@ -61,11 +50,27 @@ public class GlobalTable {
 
     public static Topology getTopology() {
         StreamsBuilder builder = new StreamsBuilder();
-        builder.globalTable(
-            "market-info",
-            Materialized.<String, JsonNode, KeyValueStore<Bytes, byte[]>>as("market-info-store")
-            .withKeySerde(Serdes.String())
-            .withValueSerde(getJsonSerde())
+        KStream<String, JsonNode> ordersStream = getStreamJson("orders", builder);
+        GlobalKTable<String, JsonNode> marketInfo = builder.globalTable("market-info-store");
+        ordersStream.join(marketInfo,
+            (key, value) -> key,
+            (left,right) -> {
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode jNode = mapper.createObjectNode();
+                jNode = setFiled(jNode, "order", left);
+                jNode = setFiled(jNode, "manufacturer_text", right);
+                jNode = setFiled(jNode, "model_text", right);
+                jNode = setFiled(jNode, "submodel_text", right);
+                return (JsonNode) jNode;
+            }
+
+        );
+        ordersStream.to(
+            "orders_enriched",
+            Produced.with(
+                Serdes.String(),
+                getJsonSerde()
+            )
         );
         return builder.build();
     }
@@ -80,16 +85,17 @@ public class GlobalTable {
         return jsonSerde;
     }
 
-    public static void printState(KeyValueIterator<String, JsonNode> range) {
-        int internalCount = 0;
-        while (range.hasNext()) {
-            KeyValue<String, JsonNode> next = range.next();
-            internalCount ++;
-            if (internalCount > counter) {
-                System.out.println(next.key + ": " + next.value);
-                System.out.println(counter+"_AND_"+internalCount);
-                counter++;
-            }
-        }
+    public static KStream<String,JsonNode> getStreamJson(String topic, StreamsBuilder builder) {
+        Serde<JsonNode> jsonNodeSerde = getJsonSerde();
+        return builder.stream(
+            topic,
+            Consumed.with(Serdes.String(), jsonNodeSerde)
+        );
+    }
+
+    public static ObjectNode setFiled(ObjectNode jNode, String fieldName, JsonNode tableNode) {
+        return ((ObjectNode) jNode).put(
+            fieldName, tableNode.get(fieldName).asText()
+        );
     }
 }
