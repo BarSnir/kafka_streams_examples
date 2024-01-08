@@ -1,0 +1,6 @@
+com/kafkastreams/app/App.class
+com/kafkastreams/bank/Processor.class
+com/kafkastreams/bank/Producer.class
+com/kafkastreams/joins/Stream2Table.class
+com/kafkastreams/favoriteColor/App.class
+com/kafkastreams/bank/ProcessorV2.class
