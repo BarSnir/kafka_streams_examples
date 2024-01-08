@@ -1,4 +1,5 @@
 /Users/barsnir/Desktop/projects/kafka_streams_examples/kafka-streams-example/src/main/java/com/kafkastreams/bank/ProcessorV2.java
+/Users/barsnir/Desktop/projects/kafka_streams_examples/kafka-streams-example/src/main/java/com/kafkastreams/joins/GlobalTable.java
 /Users/barsnir/Desktop/projects/kafka_streams_examples/kafka-streams-example/src/main/java/com/kafkastreams/app/App.java
 /Users/barsnir/Desktop/projects/kafka_streams_examples/kafka-streams-example/src/main/java/com/kafkastreams/bank/Processor.java
 /Users/barsnir/Desktop/projects/kafka_streams_examples/kafka-streams-example/src/main/java/com/kafkastreams/bank/Producer.java

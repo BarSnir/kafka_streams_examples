@@ -137,7 +137,7 @@
             <artifactId>exec-maven-plugin</artifactId>
             <version>1.2.1</version>
             <configuration>
-                <mainClass>com.kafkastreams.joins.Stream2Table</mainClass>
+                <mainClass>com.kafkastreams.joins.GlobalTable</mainClass>
             </configuration>
         </plugin>
       </plugins>
